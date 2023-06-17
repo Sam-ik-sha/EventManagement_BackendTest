@@ -93,6 +93,86 @@ package com.example.demo.service;
 	        assertThrows(ResourceNotFoundException.class, () -> eventService.getEventById(id));
 	        verify(eventRepository, times(1)).findById(id);
 	    }
+	    @Test
+	     void testUpdateEvent() {
+			long id = 1L;
+			Event existingEvent = new Event();
+			existingEvent.setId((int)id);
+			existingEvent.setName("Old Name");
+			existingEvent.setDescription("Old Description");
+
+			Event updatedEvent = new Event();
+			updatedEvent.setName("New Name");
+			updatedEvent.setDescription("New Description");
+
+			when(eventRepository.findById(id)).thenReturn(Optional.of(existingEvent));
+			when(eventRepository.save(existingEvent)).thenReturn(existingEvent);
+			Event result = eventService.updateEvent(id, updatedEvent);
+
+			assertEquals(updatedEvent.getName(), result.getName());
+			assertEquals(updatedEvent.getDescription(), result.getDescription());
+			verify(eventRepository, times(1)).findById(id);
+			verify(eventRepository, times(1)).save(existingEvent);
+		}
+
+		@Test
+		void testUpdateEvent_WhenEventNotFound() {
+			long id = 1L;
+			Event updatedEvent = new Event();
+			updatedEvent.setName("New Name");
+			updatedEvent.setDescription("New Description");
+
+			when(eventRepository.findById(id)).thenReturn(Optional.empty());
+
+			assertThrows(ResourceNotFoundException.class, () -> eventService.updateEvent(id, updatedEvent));
+			verify(eventRepository, times(1)).findById(id);
+			verify(eventRepository, times(0)).save(any());
+		}
+
+		@Test
+		void testDeleteEvent() {
+			long id = 1L;
+			Event event = new Event();
+			event.setId((int)id);
+
+			when(eventRepository.findById(id)).thenReturn(Optional.of(event));
+
+			eventService.deleteEvent(id);
+
+			verify(eventRepository, times(1)).findById(id);
+			verify(eventRepository, times(1)).delete(event);
+		}
+
+		@Test
+		void testDeleteEvent_WhenEventNotFound() {
+			long id = 1L;
+
+			when(eventRepository.findById(id)).thenReturn(Optional.empty());
+
+			assertThrows(ResourceNotFoundException.class, () -> eventService.deleteEvent(id));
+			verify(eventRepository, times(1)).findById(id);
+			verify(eventRepository, times(0)).delete(any());
+		}
+
+		@Test
+		void testGetEventParticipants() {
+			long id = 1L;
+			Event event = new Event();
+			event.setId((int)id);
+
+			List<Participant> participants = new ArrayList<>();
+			participants.add(new Participant());
+			participants.add(new Participant());
+
+			event.setParticipants(participants);
+			when(eventRepository.findById(id)).thenReturn(Optional.of(event));
+
+			List<Participant> retrievedParticipants = eventService.getEventParticipants(id);
+
+			assertEquals(participants, retrievedParticipants);
+			verify(eventRepository, times(1)).findById(id);
+		}
+
 
 
 	}
